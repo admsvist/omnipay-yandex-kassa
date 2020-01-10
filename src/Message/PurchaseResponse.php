@@ -29,11 +29,14 @@ class PurchaseResponse extends AbstractResponse implements RedirectResponseInter
     public function getRedirectUrl()
     {
         $confirmation = $this->data->getConfirmation();
-        if (!$confirmation instanceof ConfirmationRedirect) {
+
+        if ($confirmation && !$confirmation instanceof ConfirmationRedirect) {
             throw new InvalidResponseException('Only redirect confirmation is supported');
+        } else {
+            return $confirmation->getConfirmationUrl();
         }
 
-        return $confirmation->getConfirmationUrl();
+        return null;
     }
 
     public function getTransactionReference()
@@ -48,12 +51,14 @@ class PurchaseResponse extends AbstractResponse implements RedirectResponseInter
 
     public function isSuccessful()
     {
-        return false;
+        return $this->data->paid;
     }
 
     public function isRedirect()
     {
-        return true;
+        $confirmation = $this->data->getConfirmation();
+
+        return $confirmation instanceof ConfirmationRedirect && $confirmation->getConfirmationUrl();
     }
 
     public function getRedirectMethod()
