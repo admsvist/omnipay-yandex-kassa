@@ -75,6 +75,15 @@ class Gateway extends AbstractGateway
      * @param array $parameters
      * @return PurchaseRequest|\Omnipay\Common\Message\AbstractRequest
      */
+    public function purchaseToken(array $parameters = [])
+    {
+        return $this->createRequest(PurchaseTokenRequest::class, $this->injectYandexClient($parameters));
+    }
+
+    /**
+     * @param array $parameters
+     * @return PurchaseRequest|\Omnipay\Common\Message\AbstractRequest
+     */
     public function purchase(array $parameters = [])
     {
         return $this->createRequest(PurchaseRequest::class, $this->injectYandexClient($parameters));
