@@ -22,7 +22,7 @@ class PurchaseRequest extends AbstractRequest
 {
     public function getData()
     {
-        $this->validate('amount', 'currency', 'returnUrl', 'transactionId', 'description');
+        $this->validate('amount', 'currency', 'transactionId', 'description');
 
         return [
             'amount' => $this->getAmount(),
@@ -30,26 +30,30 @@ class PurchaseRequest extends AbstractRequest
             'description' => $this->getDescription(),
             'return_url' => $this->getReturnUrl(),
             'transactionId' => $this->getTransactionId(),
+            'paymentToken' => $this->getPaymentToken(),
         ];
     }
 
     public function sendData($data)
     {
+        $fields = array_filter([
+            'amount' => [
+                'value' => $data['amount'],
+                'currency' => $data['currency'],
+            ],
+            'description' => $data['description'],
+            'metadata' => [
+                'transactionId' => $data['transactionId'],
+            ],
+            'payment_token' => $data['paymentToken'],
+            'confirmation' => $data['return_url'] ? [
+                'type' => 'redirect',
+                'return_url' => $data['return_url'],
+            ] : false,
+        ]);
+
         try {
-            $paymentResponse = $this->client->createPayment([
-                'amount' => [
-                    'value' => $data['amount'],
-                    'currency' => $data['currency'],
-                ],
-                'description' => $data['description'],
-                'confirmation' => [
-                    'type' => 'redirect',
-                    'return_url' => $data['return_url'],
-                ],
-                'metadata' => [
-                    'transactionId' => $data['transactionId'],
-                ],
-            ], $this->makeIdempotencyKey());
+            $paymentResponse = $this->client->createPayment($fields, $this->makeIdempotencyKey());
 
             return $this->response = new PurchaseResponse($this, $paymentResponse);
         } catch (Throwable $e) {
